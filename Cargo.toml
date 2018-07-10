@@ -1,0 +1,14 @@
+[package]
+name = "generic-arrayvec"
+version = "0.0.1"
+authors = ["Brian Bowman <seeker14491@gmail.com>"]
+description = "Interop between the arrayvec and generic_array crates"
+repository = "https://github.com/Seeker14491/generic_arrayvec"
+readme = "README.md"
+keywords = ["arrayvec", "generic_array", "generic", "vec", "stack"]
+categories = ["data-structures", "no-std"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+arrayvec = "0.4.7"
+generic-array = "0.11.1"
