@@ -65,10 +65,10 @@ matrix:
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
     # most crates.
-    - env: TARGET=thumbv6m-none-eabi
-    - env: TARGET=thumbv7em-none-eabi
-    - env: TARGET=thumbv7em-none-eabihf
-    - env: TARGET=thumbv7m-none-eabi
+    # - env: TARGET=thumbv6m-none-eabi
+    # - env: TARGET=thumbv7em-none-eabi
+    # - env: TARGET=thumbv7em-none-eabihf
+    # - env: TARGET=thumbv7m-none-eabi
 
     # Testing other channels
     - env: TARGET=x86_64-unknown-linux-gnu
