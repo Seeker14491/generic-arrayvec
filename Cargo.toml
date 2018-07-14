@@ -8,6 +8,10 @@ readme = "README.md"
 keywords = ["arrayvec", "generic_array", "generic", "vec", "stack"]
 categories = ["data-structures", "no-std"]
 license = "MIT OR Apache-2.0"
+include = [
+    "src/*",
+    "Cargo.toml",
+]
 
 [badges]
 appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
