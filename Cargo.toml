@@ -9,6 +9,10 @@ keywords = ["arrayvec", "generic_array", "generic", "vec", "stack"]
 categories = ["data-structures", "no-std"]
 license = "MIT OR Apache-2.0"
 
+[badges]
+appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
+travis-ci = { repository = "Seeker14491/generic_arrayvec", branch = "master" }
+
 [dependencies]
 arrayvec = "0.4.7"
 generic-array = "0.11.1"
