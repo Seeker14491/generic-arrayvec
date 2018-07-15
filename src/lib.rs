@@ -70,6 +70,11 @@ pub struct Wrapper<T, N>(pub GenericArray<T, N>)
 where
     N: ArrayLength<T>;
 
+/// Extension trait for [`GenericArrayVec`].
+///
+/// See its impl on [`GenericArrayVec`] for more info.
+///
+/// [`GenericArrayVec`]: type.GenericArrayVec.html
 pub trait GenericArrayVecExt<T, N>
 where
     N: ArrayLength<T>,
@@ -83,6 +88,11 @@ where
         Self: Sized;
 }
 
+/// Extension trait for [`GenericArrayString`].
+///
+/// See its impl on [`GenericArrayString`] for more info.
+///
+/// [`GenericArrayString`]: type.GenericArrayString.html
 pub trait GenericArrayStringExt<N>
 where
     N: ArrayLength<u8>,
@@ -98,6 +108,7 @@ impl<T, N> Wrapper<T, N>
 where
     N: ArrayLength<T>,
 {
+    /// Returns the inner `GenericArray` inside this `Wrapper`
     pub fn into_inner(self) -> GenericArray<T, N> {
         self.0
     }
@@ -145,6 +156,18 @@ impl<T, N> GenericArrayVecExt<T, N> for GenericArrayVec<T, N>
 where
     N: ArrayLength<T>,
 {
+    /// Creates a `GenericArrayVec` from an array or `GenericArray`.
+    ///
+    /// ```rust
+    /// # fn main() {
+    /// use generic_arrayvec::{GenericArrayVec, GenericArrayVecExt};
+    ///
+    /// let vec = GenericArrayVec::generic_from([2, 4, 6, 8]);
+    ///
+    /// assert_eq!(vec.len(), 4);
+    /// assert_eq!(vec.capacity(), 4);
+    /// # }
+    /// ```
     fn generic_from<A>(arr: A) -> GenericArrayVec<T, N>
     where
         A: Into<GenericArray<T, N>>,
@@ -152,6 +175,23 @@ where
         ArrayVec::from(Wrapper::from(arr.into()))
     }
 
+    /// Returns the inner `GenericArray`, if `self` is full to its capacity.
+    ///
+    /// **Errors** if `self` is not filled to capacity.
+    ///
+    /// ```rust
+    /// # fn main() {
+    /// use generic_arrayvec::{GenericArrayVec, GenericArrayVecExt, typenum::U5};
+    ///
+    /// let mut vec = GenericArrayVec::<i32, U5>::new();
+    /// vec.push(0);
+    /// vec.extend(1..5);
+    ///
+    /// let generic_array = vec.into_generic_array().unwrap();
+    ///
+    /// assert_eq!(&*generic_array, &[0, 1, 2, 3, 4][..]);
+    /// # }
+    /// ```
     fn into_generic_array(self) -> Result<GenericArray<T, N>, Self> {
         Ok(self.into_inner()?.into_inner())
     }
@@ -166,8 +206,6 @@ where
     /// Capacity is inferred from the type parameter.
     ///
     /// **Errors** if the capacity is not large enough to fit the string.
-    ///
-    /// # Examples
     ///
     /// ```rust
     /// # fn main() {
