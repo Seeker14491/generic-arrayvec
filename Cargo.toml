@@ -3,7 +3,7 @@ name = "generic-arrayvec"
 version = "0.0.1"
 authors = ["Brian Bowman <seeker14491@gmail.com>"]
 description = "Interop between the arrayvec and generic_array crates"
-repository = "https://github.com/Seeker14491/generic_arrayvec"
+repository = "https://github.com/Seeker14491/generic-arrayvec"
 readme = "README.md"
 keywords = ["arrayvec", "generic_array", "generic", "vec", "stack"]
 categories = ["data-structures", "no-std"]
@@ -15,7 +15,7 @@ include = [
 
 [badges]
 appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
-travis-ci = { repository = "Seeker14491/generic_arrayvec", branch = "master" }
+travis-ci = { repository = "Seeker14491/generic-arrayvec", branch = "master" }
 
 [dependencies]
 arrayvec = "0.4.7"

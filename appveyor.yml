@@ -5,7 +5,7 @@ environment:
   global:
     RUST_VERSION: stable
 
-    CRATE_NAME: generic_arrayvec
+    CRATE_NAME: generic-arrayvec
 
   matrix:
     # MinGW
