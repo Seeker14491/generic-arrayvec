@@ -12,7 +12,7 @@
 //! [`GenericArrayVecExt`] and [`GenericArrayStringExt`] that provide additional constructors and
 //! conversions.
 //!
-//! An example of instanciating and pushing an item onto a `GenericArrayVec`:
+//! An example of instantiating and pushing an item onto a `GenericArrayVec`:
 //!
 //! ```rust
 //! # fn main() {
