@@ -1,0 +1,14 @@
+version: '2'
+
+tasks:
+  release:
+    cmds:
+      - test '{{.VERSION}}' != '<no value>' || { echo 'VERSION not given'; exit 1; }
+      - cargo test --all-features
+      - cargo fmt -- --check
+      - git diff HEAD --exit-code --name-only
+      - cargo publish --dry-run
+      - git tag -a 'v{{.VERSION}}' -m "Release v{{.VERSION}}"
+      - git push origin master
+      - git push origin 'v{{.VERSION}}'
+      - cargo publish

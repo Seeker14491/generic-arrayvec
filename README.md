@@ -9,10 +9,10 @@ This crate provides interop between the [`arrayvec`](https://crates.io/crates/ar
 
 Licensed under either of
 
- * Apache License, Version 2.0
-   (http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license
-   (http://opensource.org/licenses/MIT)
+- Apache License, Version 2.0
+  (http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license
+  (http://opensource.org/licenses/MIT)
 
 at your option.
 

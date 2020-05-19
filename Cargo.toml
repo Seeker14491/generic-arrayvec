@@ -2,6 +2,7 @@
 name = "generic-arrayvec"
 version = "0.2.0"
 authors = ["Brian Bowman <seeker14491@gmail.com>"]
+edition = "2018"
 description = "Interop between the arrayvec and generic_array crates"
 repository = "https://github.com/Seeker14491/generic-arrayvec"
 readme = "README.md"
@@ -16,7 +17,16 @@ include = [
 [badges]
 appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
 travis-ci = { repository = "Seeker14491/generic-arrayvec", branch = "master" }
+maintenance = { status = "passively-maintained" }
+
+[features]
+arrayvec-sizes-33-128 = ["arrayvec/array-sizes-33-128"]
+arrayvec-sizes-129-255 = ["arrayvec/array-sizes-129-255"]
+generic-array-more-lengths = ["generic-array/more_lengths"]
+
+[dev-dependencies]
+version-sync = "0.9.0"
 
 [dependencies]
-arrayvec = "0.4.7"
-generic-array = "0.13.0"
+arrayvec = "0.5.1"
+generic-array = "0.14.1"
