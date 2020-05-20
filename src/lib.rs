@@ -33,7 +33,7 @@
 //! [`GenericArrayStringExt`]: trait.GenericArrayStringExt.html
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.2.0")]
+#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.3.0")]
 #![warn(
     rust_2018_idioms,
     deprecated_in_future,
