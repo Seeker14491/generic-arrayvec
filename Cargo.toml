@@ -17,7 +17,7 @@ include = [
 [badges]
 appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
 travis-ci = { repository = "Seeker14491/generic-arrayvec", branch = "master" }
-maintenance = { status = "passively-maintained" }
+maintenance = { status = "deprecated" }
 
 [features]
 arrayvec-sizes-33-128 = ["arrayvec/array-sizes-33-128"]
