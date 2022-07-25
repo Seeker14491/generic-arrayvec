@@ -10,23 +10,24 @@ keywords = ["arrayvec", "generic_array", "generic", "vec", "stack"]
 categories = ["data-structures", "no-std"]
 license = "MIT OR Apache-2.0"
 include = [
-    "src/*",
-    "Cargo.toml",
+    "src/",
+    "LICENSE-*",
 ]
 
 [badges]
-appveyor = { repository = "Seeker14491/generic-arrayvec", branch = "master", service = "github" }
-travis-ci = { repository = "Seeker14491/generic-arrayvec", branch = "master" }
-maintenance = { status = "deprecated" }
+maintenance = { status = "passively-maintained" }
 
 [features]
+default = ["std"]
 arrayvec-sizes-33-128 = ["arrayvec/array-sizes-33-128"]
 arrayvec-sizes-129-255 = ["arrayvec/array-sizes-129-255"]
 generic-array-more-lengths = ["generic-array/more_lengths"]
+serde = ["arrayvec/serde"]
+std = ["arrayvec/std"]
 
 [dev-dependencies]
-version-sync = "0.9.0"
+version-sync = "0.9"
 
 [dependencies]
-arrayvec = "0.5.1"
-generic-array = "0.14.1"
+arrayvec = { version = "0.5", default-features = false }
+generic-array = "0.14"

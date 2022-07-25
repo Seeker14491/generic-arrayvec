@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.3.1")]
+
 //! This crate provides interop between the [arrayvec] and [generic_array] crates, allowing you to
 //! use generic_array's [`GenericArray`] as the backing storage for the data structures in
 //! arrayvec. This lets you have vector and string types that store their contents inline, with a
@@ -11,29 +13,90 @@
 //! [`GenericArrayVecExt`] and [`GenericArrayStringExt`] that provide additional constructors and
 //! conversions.
 //!
-//! An example of instantiating and pushing an item onto a `GenericArrayVec`:
+//! ## Example
 //!
 //! ```rust
-//! use generic_arrayvec::{GenericArrayVec, typenum::U5};
+//! use generic_arrayvec::arrayvec::Array;
+//! use generic_arrayvec::typenum::{Prod, U2, U4};
+//! use generic_arrayvec::{ArrayvecStorage, Capacity, GenericArrayVec};
+//! use std::ops::Mul;
 //!
-//! // Create a new GenericArrayVec of inferred element type with a capacity of 5
-//! let mut arr = GenericArrayVec::<_, U5>::new();
+//! fn main() {
+//!     // Create a vector of `u8`s with a capacity of 4.
+//!     let mut arr = GenericArrayVec::<u8, U4>::new();
+//!     assert_eq!(arr.capacity(), 4);
 //!
-//! arr.push(10);
+//!     // Add some elements to it.
+//!     arr.push(1);
+//!     arr.push(2);
+//!     arr.push(3);
+//!     assert_eq!(&arr[..], &[1, 2, 3]);
+//!
+//!     // To demonstrate generic bounds, we call our `double()` function, which is defined below.
+//!     // This function returns a new vector with double the capacity of the input vector.
+//!     // The new vector contains two copies of the input vector's items.
+//!     let doubled = double(&arr);
+//!     assert_eq!(&doubled[..], &[1, 2, 3, 1, 2, 3]);
+//!     assert_eq!(doubled.capacity(), 8);
+//! }
+//!
+//! fn double<N>(original: &GenericArrayVec<u8, N>) -> GenericArrayVec<u8, Prod<N, U2>>
+//! where
+//!     // Boilerplate bounds for the input array.
+//!     N: Capacity<u8>,
+//!     ArrayvecStorage<u8, N>: Array<Item = u8>,
+//!
+//!     // Boilerplate bounds for the output array. Note it's the same as above, but
+//!     // `N` -> `Prod<N, U2>`.
+//!     Prod<N, U2>: Capacity<u8>,
+//!     ArrayvecStorage<u8, Prod<N, U2>>: Array<Item = u8>,
+//!
+//!     N: Mul<U2>,
+//! {
+//!     let mut new = GenericArrayVec::<u8, Prod<N, U2>>::new();
+//!
+//!     // These `unwrap()`s can never fail.
+//!     new.try_extend_from_slice(original.as_slice()).unwrap();
+//!     new.try_extend_from_slice(original.as_slice()).unwrap();
+//!
+//!     new
+//! }
 //! ```
 //!
-//! [arrayvec]: arrayvec
-//! [generic_array]: generic_array
-//! [`GenericArrayVec`]: type.GenericArrayVec.html
-//! [`GenericArrayString`]: type.GenericArrayString.html
-//! [`GenericArray`]: https://docs.rs/generic-array/0.14/generic_array/struct.GenericArray.html
-//! [`ArrayVec`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayVec.html
-//! [`ArrayString`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayString.html
-//! [`GenericArrayVecExt`]: trait.GenericArrayVecExt.html
-//! [`GenericArrayStringExt`]: trait.GenericArrayStringExt.html
+//! ## `where` bound boilerplate
+//!
+//! When working with a [`GenericArrayVec<T, N>`] where `T` and/or `N` are not concrete types, you
+//! will need to always include certain bounds in your `where` clauses, or you will get a compile
+//! error. This dummy function shows how to specify them:
+//!
+//! ```rust
+//! use generic_arrayvec::arrayvec::Array;
+//! use generic_arrayvec::{ArrayvecStorage, Capacity, GenericArrayVec};
+//!
+//! fn f<T, N>(_arr: GenericArrayVec<T, N>)
+//! where
+//!     N: Capacity<T>,
+//!     ArrayvecStorage<T, N>: Array<Item = T>,
+//! {
+//! }
+//! ```
+//!
+//! And this is how you specify them for [`GenericArrayString<N>`]:
+//!
+//! ```rust
+//! use generic_arrayvec::arrayvec::Array;
+//! use generic_arrayvec::{ArrayvecStorage, Capacity, GenericArrayString};
+//!
+//! fn f<N>(_arr: GenericArrayString<N>)
+//! where
+//!     N: Capacity<u8>,
+//!     N::ArrayType: Copy,
+//!     ArrayvecStorage<u8, N>: Array<Item = u8>,
+//! {
+//! }
+//! ```
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.3.1")]
 #![warn(
     rust_2018_idioms,
     deprecated_in_future,
@@ -47,98 +110,57 @@ pub use generic_array::{self, typenum};
 
 use arrayvec::{Array, ArrayString, ArrayVec, CapacityError};
 use core::str::Utf8Error;
+use generic_array::typenum::{IsLess, U1, U2, U256, U4294967296, U65536};
 use generic_array::{ArrayLength, GenericArray};
+use plumbing::{ArrayvecStorageRaw, IndexForCapacity, PickIndexBreakpointsForCapacity};
+
+/// Low-level implementation details you shouldn't need to touch.
+pub mod plumbing;
 
 /// A [`GenericArray`]-backed [`ArrayVec`].
-///
-/// [`GenericArray`]: https://docs.rs/generic-array/0.14/generic_array/struct.GenericArray.html
-/// [`ArrayVec`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayVec.html
-pub type GenericArrayVec<T, N> = ArrayVec<Wrapper<T, N>>;
+pub type GenericArrayVec<T, N> = ArrayVec<ArrayvecStorage<T, N>>;
 
 /// A [`GenericArray`]-backed [`ArrayString`].
-///
-/// [`GenericArray`]: https://docs.rs/generic-array/0.14/generic_array/struct.GenericArray.html
-/// [`ArrayString`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayString.html
-pub type GenericArrayString<N> = ArrayString<Wrapper<u8, N>>;
+pub type GenericArrayString<N> = ArrayString<ArrayvecStorage<u8, N>>;
 
 /// A wrapper around a [`GenericArray`] that implements the [`Array`] trait from the arrayvec
 /// crate, allowing it to be used as the backing store for [`ArrayVec`] and [`ArrayString`].
 ///
-/// You probably don't need to use this type directly; just use the constructors provided by the
-/// [`GenericArrayVecExt`] and [`GenericArrayStringExt`] traits.
-///
-/// [`GenericArray`]: https://docs.rs/generic-array/0.14/generic_array/struct.GenericArray.html
-/// [`Array`]: https://docs.rs/arrayvec/0.5/arrayvec/trait.Array.html
-/// [`ArrayVec`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayVec.html
-/// [`ArrayString`]: https://docs.rs/arrayvec/0.5/arrayvec/struct.ArrayString.html
-/// [`GenericArrayVecExt`]: trait.GenericArrayVecExt.html
-/// [`GenericArrayStringExt`]: trait.GenericArrayStringExt.html
-#[derive(Debug, Clone)]
-pub struct Wrapper<T, N>(pub GenericArray<T, N>)
-where
-    N: ArrayLength<T>;
+/// You likely won't need to interact with this type directly, except in `where` clauses when
+/// working with [`GenericArrayVec`] and [`GenericArrayString`]; see their docs for details.
+pub type ArrayvecStorage<T, N> = ArrayvecStorageRaw<T, N, IndexForCapacity<N>>;
 
-impl<T, N> Wrapper<T, N>
-where
-    N: ArrayLength<T>,
-{
-    /// Returns the inner `GenericArray` inside this `Wrapper`
-    pub fn into_inner(self) -> GenericArray<T, N> {
-        self.0
-    }
-}
-
-impl<T, N> Copy for Wrapper<T, N>
-where
-    T: Copy,
-    N: ArrayLength<T>,
-    N::ArrayType: Copy,
+/// A trait implemented by `typenum`'s unsigned integers, which lets them be used to define the
+/// capacity of [`GenericArrayVec`]/[`GenericArrayString`].
+pub trait Capacity<T>:
+    ArrayLength<T>
+    + PickIndexBreakpointsForCapacity
+    + IsLess<U1>
+    + IsLess<U2>
+    + IsLess<U256>
+    + IsLess<U65536>
+    + IsLess<U4294967296>
 {
 }
 
-impl<T, N> From<GenericArray<T, N>> for Wrapper<T, N>
-where
-    N: ArrayLength<T>,
+impl<N, T> Capacity<T> for N where
+    N: ArrayLength<T>
+        + PickIndexBreakpointsForCapacity
+        + IsLess<U1>
+        + IsLess<U2>
+        + IsLess<U256>
+        + IsLess<U65536>
+        + IsLess<U4294967296>
 {
-    fn from(arr: GenericArray<T, N>) -> Self {
-        Wrapper(arr)
-    }
-}
-
-impl<T, N> Into<GenericArray<T, N>> for Wrapper<T, N>
-where
-    N: ArrayLength<T>,
-{
-    fn into(self) -> GenericArray<T, N> {
-        self.0
-    }
-}
-
-unsafe impl<T, N> Array for Wrapper<T, N>
-where
-    N: ArrayLength<T>,
-{
-    type Item = T;
-    type Index = usize;
-    const CAPACITY: usize = N::USIZE;
-
-    fn as_slice(&self) -> &[Self::Item] {
-        self.0.as_slice()
-    }
-
-    fn as_mut_slice(&mut self) -> &mut [Self::Item] {
-        self.0.as_mut_slice()
-    }
 }
 
 /// Extension trait for [`GenericArrayVec`].
 ///
 /// See its impl on [`GenericArrayVec`] for more info.
-///
-/// [`GenericArrayVec`]: type.GenericArrayVec.html
 pub trait GenericArrayVecExt<T, N>
 where
-    N: ArrayLength<T>,
+    N: Capacity<T>,
+    ArrayvecStorage<T, N>: Array,
 {
     fn generic_from<A>(arr: A) -> GenericArrayVec<T, N>
     where
@@ -151,7 +173,8 @@ where
 
 impl<T, N> GenericArrayVecExt<T, N> for GenericArrayVec<T, N>
 where
-    N: ArrayLength<T>,
+    N: Capacity<T>,
+    ArrayvecStorage<T, N>: Array,
 {
     /// Creates a `GenericArrayVec` from an array or `GenericArray`.
     ///
@@ -167,7 +190,7 @@ where
     where
         A: Into<GenericArray<T, N>>,
     {
-        ArrayVec::from(Wrapper::from(arr.into()))
+        ArrayVec::from(ArrayvecStorage::from(arr.into()))
     }
 
     /// Returns the inner `GenericArray`, if `self` is full to its capacity.
@@ -175,7 +198,8 @@ where
     /// **Errors** if `self` is not filled to capacity.
     ///
     /// ```rust
-    /// use generic_arrayvec::{GenericArrayVec, GenericArrayVecExt, typenum::U5};
+    /// use generic_arrayvec::typenum::U5;
+    /// use generic_arrayvec::{GenericArrayVec, GenericArrayVecExt};
     ///
     /// let mut vec = GenericArrayVec::<i32, U5>::new();
     /// vec.push(0);
@@ -193,11 +217,11 @@ where
 /// Extension trait for [`GenericArrayString`].
 ///
 /// See its impl on [`GenericArrayString`] for more info.
-///
-/// [`GenericArrayString`]: type.GenericArrayString.html
 pub trait GenericArrayStringExt<N>
 where
-    N: ArrayLength<u8>,
+    N: Capacity<u8>,
+    ArrayvecStorage<u8, N>: Array<Item = u8>,
+
     N::ArrayType: Copy,
 {
     fn generic_from(string: &str) -> Result<GenericArrayString<N>, CapacityError<&str>>;
@@ -209,7 +233,9 @@ where
 
 impl<N> GenericArrayStringExt<N> for GenericArrayString<N>
 where
-    N: ArrayLength<u8>,
+    N: Capacity<u8>,
+    ArrayvecStorage<u8, N>: Array<Item = u8>,
+
     N::ArrayType: Copy,
 {
     /// Creates a `GenericArrayString` from a `str`.
@@ -219,7 +245,8 @@ where
     /// **Errors** if the capacity is not large enough to fit the string.
     ///
     /// ```rust
-    /// use generic_arrayvec::{GenericArrayString, GenericArrayStringExt, typenum::U10};
+    /// use generic_arrayvec::typenum::U10;
+    /// use generic_arrayvec::{GenericArrayString, GenericArrayStringExt};
     ///
     /// let string = GenericArrayString::<U10>::generic_from("hello").unwrap();
     ///
@@ -252,10 +279,8 @@ where
     /// From a byte-holding `GenericArray`:
     ///
     /// ```rust
-    /// use generic_arrayvec::{
-    ///     GenericArrayString, GenericArrayStringExt,
-    ///     generic_array::GenericArray,
-    /// };
+    /// use generic_arrayvec::generic_array::GenericArray;
+    /// use generic_arrayvec::{GenericArrayString, GenericArrayStringExt};
     ///
     /// let arr = GenericArray::from([b'h', b'i']);
     /// let string = GenericArrayString::generic_from_byte_string(&arr).unwrap();
@@ -267,8 +292,13 @@ where
     where
         A: Into<GenericArray<u8, N>> + AsRef<[u8]>,
     {
-        ArrayString::from_byte_string(&Wrapper::from(GenericArray::clone_from_slice(
+        ArrayString::from_byte_string(&ArrayvecStorage::from(GenericArray::clone_from_slice(
             byte_string.as_ref(),
         )))
     }
+}
+
+mod private {
+    #[allow(missing_debug_implementations)]
+    pub enum Sealed {}
 }

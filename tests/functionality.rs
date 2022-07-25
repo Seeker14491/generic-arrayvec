@@ -1,8 +1,6 @@
-use generic_arrayvec::{
-    generic_array::GenericArray,
-    typenum::{U10, U41, U5},
-    *,
-};
+use generic_arrayvec::generic_array::GenericArray;
+use generic_arrayvec::typenum::{U10, U41, U5};
+use generic_arrayvec::*;
 
 #[test]
 fn test_vec_simple() {
