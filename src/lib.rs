@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.3.1")]
+#![doc(html_root_url = "https://docs.rs/generic-arrayvec/0.4.0")]
 
 //! This crate provides interop between the [arrayvec] and [generic_array] crates, allowing you to
 //! use generic_array's [`GenericArray`] as the backing storage for the data structures in

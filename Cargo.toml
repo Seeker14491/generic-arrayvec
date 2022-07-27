@@ -1,6 +1,6 @@
 [package]
 name = "generic-arrayvec"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Brian Bowman <seeker14491@gmail.com>"]
 edition = "2018"
 description = "Interop between the arrayvec and generic_array crates"
