@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.4.0]
+## [0.4.0] - 2022-07-27
 ### Added
 - Add trait `Capacity<T>`. This is used in `where` bounds now instead of `ArrayLength<T>`.
 
